@@ -44,9 +44,8 @@ where:
 
 #### 3. Decision Making
 The car's decision to slow down is based on:
-1. Current pedestrian position relative to road
-2. Probability of goals requiring road crossing
-3. Crossing probability threshold (default set to 0.3)
+1. Probability of goals requiring road crossing
+2. Crossing probability threshold (default set to 0.3)
 
 ### Implementation Details
 
