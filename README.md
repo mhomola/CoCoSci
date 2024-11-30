@@ -1,15 +1,12 @@
 # Pedestrian Goal Inference for Autonomous Vehicles
 
 ## Overview
-This project implements a Bayesian inverse planning model to infer pedestrian goals and make autonomous vehicle decisions in an urban environment. The model observes partial pedestrian trajectories and infers the probability distribution over possible destinations, considering physical constraints like obstacles and the road layout.
+This 9.660 project implements a Bayesian inverse planning model to infer pedestrian goals and make autonomous vehicle decisions in an urban environment. The model observes partial pedestrian trajectories and infers the probability distribution over possible destinations, considering physical constraints like obstacles and the road layout.
 
 ## Method
 
 ### Grid World Environment
-- 7x7 grid world with three possible destinations: Arena, Bank, and Cafe
-- Road runs horizontally through the middle (y=3)
-- Contains obstacles that pedestrians must avoid
-- Car travels along the road and must decide whether to slow down based on pedestrian behavior
+7x7 grid world with three possible destinations: Arena, Bank, and Cafe; road runs horizontally through the middle; contains obstacles that pedestrians must avoid; car travels along the road and must decide whether to slow down based on pedestrian behavior
 
 ### Bayesian Inference Model
 
@@ -25,7 +22,7 @@ where:
 - `total_cost`: Actual path cost + remaining distance to goal
 - `optimal_cost`: Shortest possible path length from start to goal avoiding obstacles
 - `progress`: How much closer the trajectory gets to the goal
-- `β`: Rationality parameter (higher values mean more rational behavior)
+- `β`: Rationality parameter (higher values = more rational behavior)
 
 The likelihood incorporates:
 - Obstacle avoidance using A* pathfinding
