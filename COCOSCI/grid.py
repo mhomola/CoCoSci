@@ -91,7 +91,7 @@ def trajectory_likelihood(goal, trajectory, obstacles, grid_size, beta=0.5):
     else:
         progress = (start_to_goal - current_to_goal) / len(trajectory)
     progress_factor = np.exp(beta * progress)
-
+    progress_factor = 1
     return likelihood * progress_factor
 
 
@@ -100,42 +100,48 @@ def infer_goal_and_decide(grid, pedestrian_start, pedestrian_goals, observed_tra
     Infer pedestrian's goal and decide car behavior (Bayesian inference)
     """
 
-    # dict of goals with equal priors
+    # Dictionary of goals with equal priors
     goal_names = ['Arena', 'Bank', 'Cafe']
     goal_dict = dict(zip(goal_names, pedestrian_goals))
     num_goals = len(pedestrian_goals)
     prior = 1.0 / num_goals
 
-    # calc likelihoods for each goal (considering obstacles)
+    # Calculate likelihoods for each goal (considering obstacles)
     grid_size = grid.shape
     likelihoods = {}
     for name, goal_pos in goal_dict.items():
         likelihoods[name] = trajectory_likelihood(goal_pos, observed_trajectory,
                                                   obstacle_cells, grid_size)
 
-    # calc posteriors
+    # Calculate posteriors
     posteriors = {}
     total_probability = 0
     for name in goal_dict:
         posteriors[name] = likelihoods[name] * prior
         total_probability += posteriors[name]
 
-    # normalize
+    # Handle zero probability case
+    if total_probability == 0:
+        print("Warning: Total probability is zero. Invalid trajectory or model parameters.")
+        goal_probabilities = {name: 1.0 / num_goals for name in goal_dict}  # Assign uniform probabilities
+        return goal_probabilities, "Continue"
+
+    # Normalize probabilities
     goal_probabilities = {name: prob / total_probability
                           for name, prob in posteriors.items()}
 
-    # car behavior
+    # Car behavior
     crossing_probability = 0
     road_y = 3  # Assuming road is at y=3
 
     current_pos = observed_trajectory[-1]
     for name, goal_pos in goal_dict.items():
-        # check if goal requires crossing
+        # Check if goal requires crossing
         if (current_pos[0] > road_y and goal_pos[0] < road_y) or \
                 (current_pos[0] < road_y and goal_pos[0] > road_y):
             crossing_probability += goal_probabilities[name]
 
-    DECISION_THRESHOLD = 0.3 # We can tune this!
+    DECISION_THRESHOLD = 0.9  # We can tune this!
     car_decision = "Slow Down" if crossing_probability > DECISION_THRESHOLD else "Continue"
 
     return goal_probabilities, car_decision
@@ -192,8 +198,9 @@ def visualize(grid, pedestrian_start, pedestrian_goals, observed_trajectories, c
     for goal, name in zip(pedestrian_goals, goal_names):
         prob = goal_probabilities[name]
         ax.add_patch(plt.Rectangle((goal[1] - 0.5, goal[0] - 0.5), 1, 1, color="brown"))
-        ax.text(goal[1], goal[0], f"{name}\n{prob:.2f}", color="white", fontsize=10,
-                ha="center", va="center")
+        ax.text(goal[1], goal[0], f"{name}\n", color="white", fontsize=10, ha="center", va="center")
+        #ax.text(goal[1], goal[0], f"{name}\n{prob:.2f}", color="white", fontsize=10,
+        #        ha="center", va="center")
 
     # carr
     add_icon(ax, car_path[0], car_image_path, zoom=0.05)
@@ -213,14 +220,19 @@ if __name__ == "__main__":
     pedestrian_start = (6, 2)
     pedestrian_goals = [(1, 1), (1, 5), (5, 6)]  # Arena, Bank, Cafe
 
-    # different test trajectories
+    # Different test trajectories
     trajectories = {
-        "toward_arena": [(6, 2), (5, 2), (5, 1)],
-        "toward_bank": [(6, 2), (5, 3), (4, 4), (3, 5)],
-        "toward_cafe": [(6, 2), (6, 3), (5, 4)],
-        "obstacle_avoidance": [(6, 2), (5, 1), (4, 1)]
+        "toward_arena":         [(6, 2), (5, 2), (5, 1)],
+        "toward_bank":          [(6, 2), (5, 3), (4, 4), (3, 5)],
+        "toward_cafe":          [(6, 2), (6, 3), (5, 4)],
+        "obstacle_avoidance":   [(6, 2), (5, 1), (4, 1)],
+        "Path A":               [(6, 2), (5, 2), (5, 1), (4, 1)],
+        "Path B":               [(4, 3), (4, 2)], #(4, 1)],
+        "Path C":               [(2, 5), (2, 6)],
+        "Path D":               [(6, 2), (6, 3), (6, 4)]
     }
-    observed_trajectories = [trajectories["toward_cafe"]]  # change to test different trajectory
+
+    observed_trajectories = [trajectories["Path B"]]  # change to test different trajectory
     car_path = [(3, i) for i in range(7)]
     obstacle_cells = [(2, 2), (2, 3), (2, 4), (4, 4), (4, 5)]
 
@@ -228,7 +240,9 @@ if __name__ == "__main__":
     goal_probabilities, car_decision = infer_goal_and_decide(
         grid, pedestrian_start, pedestrian_goals, observed_trajectories[0], car_path, obstacle_cells)
 
-    print("Goal Probabilities:", goal_probabilities)
+    #print("Goal Probabilities:", goal_probabilities)
+    formatted_probabilities = ", ".join([f"{goal}: {float(prob):.4f}" for goal, prob in goal_probabilities.items()])
+    print("Goal Probabilities:", formatted_probabilities)
     print("Car Decision:", car_decision)
 
     car_image_path = "car_icon.png"
@@ -246,3 +260,4 @@ if __name__ == "__main__":
         car_image_path,
         pedestrian_image_path
     )
+

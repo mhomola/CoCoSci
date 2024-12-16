@@ -1,0 +1,6 @@
+Trajectory,Arena (P)_human,Bank (P)_human,Cafe (P)_human,Decision (human),Arena (P)_model,Bank (P)_model,Cafe (P)_model,Decision (model)
+toward_arena,0.9,0.05,0.05,Slow Down,0.6547955394827877,0.1726022302586062,0.1726022302586062,Slow Down
+toward_bank,0.2,0.7,0.1,Continue,0.0,0.0,0.0,Invalid
+toward_cafe,0.1,0.1,0.8,Continue,0.05212246864781001,0.1977353359008273,0.7501421954513626,Continue
+obstacle_avoidance,0.5,0.25,0.25,Slow Down,0.7501421954513626,0.1977353359008273,0.05212246864781001,Slow Down
+ambiguous,0.33,0.33,0.34,Continue,0.0,0.0,0.0,Invalid
